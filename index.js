@@ -6,7 +6,8 @@ async function getAndRetry(url, retryCount) {
   return RxHR.get(url).pipe(
     tap(output => {
       if (output.response.statusCode >= 400)
-        throw new Error(`StatusCode: ${output.response.statusCode}`);
+        throw new Error('StatusCode: ' + output.response.statusCode);
+        // No string interpolation because backticks in code can cause errors in Markdown parsers.
     }),
     catchError(error => {
       console.log('Tried ' + url + ' Got ' + error);
