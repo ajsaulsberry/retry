@@ -1,6 +1,7 @@
 import { RxHR } from '@akanass/rx-http-request';
 import { retry, catchError, tap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+const ora = require('ora');
 
 async function getAndRetry(url, retryCount) {
   return RxHR.get(url).pipe(
@@ -10,7 +11,7 @@ async function getAndRetry(url, retryCount) {
         // No string interpolation because backticks in code can cause errors in Markdown parsers.
     }),
     catchError(error => {
-      console.log('Tried ' + url + ' Got ' + error);
+      console.log('\nTried ' + url + ' Got ' + error);
       return throwError(error);
     }),
     retry(retryCount),
@@ -18,10 +19,14 @@ async function getAndRetry(url, retryCount) {
 }
 
 (async () => {
+  const options = { color: 'magenta', text: 'Attempting REST API call...' } //
+  const spinner = ora(options).start();
   try {
-    const results = await getAndRetry('https://api.mocklets.com/mock68043/', 10);
-    console.log(results.body);
-  } catch (error) {
-    console.log('Retries were exhausted before a successful response was received. :-(');
+    const results = await getAndRetry('https://api.mocklets.com/mock68043/', 1, spinner);
+    spinner.succeed(results.response.body);
   }
+  catch (error) {
+    error => spinner.fail('Retries exhausted before successful response with error ' + error);
+  }
+  //spinner.stop();
 })();
